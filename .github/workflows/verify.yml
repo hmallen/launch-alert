@@ -1,0 +1,51 @@
+name: Verify
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Local HTTPS integration
+        run: python tools/integration_smoke.py
+      - name: Validate Unraid package
+        run: python tools/validate_unraid.py
+
+  image:
+    name: Docker build and smoke check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build image without publishing
+        run: docker build --tag launch-alert:verify .
+      - name: Check container entry point without network access
+        run: docker run --rm --network none launch-alert:verify python -m launch_alert --help
+      - name: Check Unraid user can read application files
+        run: docker run --rm --network none --user 99:100 launch-alert:verify python -m launch_alert --help
+      - name: Check Unraid appdata, health, and restart recovery
+        run: python3 tools/unraid_smoke.py --image launch-alert:verify

@@ -1,0 +1,38 @@
+[Unit]
+Description=Rocket launch livestream reminders
+Wants=network-online.target
+After=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=10
+
+[Service]
+Type=simple
+User=launch-alert
+Group=launch-alert
+WorkingDirectory=/opt/launch-alert
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+Environment=ENV_FILE=/dev/null
+EnvironmentFile=/etc/launch-alert.env
+ExecStart=/usr/bin/python3 -m launch_alert run
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=30
+StateDirectory=launch-alert
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

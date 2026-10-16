@@ -1,0 +1,42 @@
+services:
+  launch-alert:
+    build: .
+    image: launch-alert:local
+    restart: unless-stopped
+    init: true
+    env_file:
+      - .env
+    environment:
+      DB_PATH: /app/data/launch-alert.sqlite3
+      HEALTH_HOST: 0.0.0.0
+      HEALTH_PORT: "8080"
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - launch-alert-data:/app/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=5).read()"
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+volumes:
+  launch-alert-data:

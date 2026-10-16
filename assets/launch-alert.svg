@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <title>Launch Alert</title>
+  <desc>A white rocket with a blue window and orange exhaust against a dark sky.</desc>
+  <rect width="256" height="256" rx="48" fill="#13243d"/>
+  <path d="M47 171C16 222 94 246 174 199" fill="none" stroke="#42cde8" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="202" cy="48" r="5" fill="#9de9f5"/>
+  <circle cx="57" cy="61" r="3" fill="#9de9f5"/>
+  <circle cx="210" cy="166" r="3" fill="#9de9f5"/>
+  <g transform="rotate(35 128 128)">
+    <path d="M114 171Q128 228 142 171Z" fill="#ff883e"/>
+    <path d="M122 170Q128 203 134 170Z" fill="#ffe5a2"/>
+    <path d="M104 117L79 162L107 154ZM152 117L177 162L149 154Z" fill="#42cde8"/>
+    <path d="M128 32C96 62 97 122 108 166H148C159 122 160 62 128 32Z" fill="#f3f7fc"/>
+    <path d="M128 32C114 45 107 63 103 81H153C149 63 142 45 128 32Z" fill="#42cde8"/>
+    <circle cx="128" cy="105" r="20" fill="#13243d"/>
+    <circle cx="128" cy="105" r="13" fill="#42cde8"/>
+    <path d="M111 153H145L148 166H108Z" fill="#bacadd"/>
+  </g>
+</svg>
