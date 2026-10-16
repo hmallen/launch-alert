@@ -1,0 +1,107 @@
+name: Publish image
+
+# Publishing is an explicit release action. Branch pushes and pull requests only verify.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version, e.g. v1.0.0 or v1.1.0-rc.1 (stable versions also update latest)"
+        required: true
+        default: v1.0.0
+        type: string
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-image
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    uses: ./.github/workflows/verify.yml
+    permissions:
+      contents: read
+
+  publish:
+    name: Publish amd64 and arm64 image
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Validate release version and derive image tags
+        id: release
+        env:
+          REQUESTED_VERSION: ${{ inputs.version || github.ref_name }}
+        shell: python
+        run: |
+          import os
+          import re
+          from pathlib import Path
+
+          requested = os.environ["REQUESTED_VERSION"]
+          match = re.fullmatch(
+              r"v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)"
+              r"(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?", requested
+          )
+          if not match or len(requested) > 129:
+              raise SystemExit("Version must be vMAJOR.MINOR.PATCH with an optional prerelease; build metadata is not supported.")
+          major, minor, patch, prerelease = match.groups()
+          if prerelease and any(part.isdigit() and len(part) > 1 and part.startswith("0") for part in prerelease.split(".")):
+              raise SystemExit("Numeric prerelease identifiers must not have leading zeroes.")
+          image = "ghcr.io/" + os.environ["GITHUB_REPOSITORY"].lower()
+          version = requested[1:]
+          tags = [f"{image}:{version}"]
+          if prerelease is None:
+              tags.extend([f"{image}:{major}.{minor}", f"{image}:{major}", f"{image}:latest"])
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
+              output.write(f"image={image}\nversion={version}\ntags<<TAGS\n" + "\n".join(tags) + "\nTAGS\n")
+      - name: Set up QEMU for arm64
+        uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+        with:
+          platforms: arm64
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Build and publish image
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.release.outputs.tags }}
+          labels: |
+            org.opencontainers.image.title=Launch Alert
+            org.opencontainers.image.description=Persistent rocket launch livestream reminders via ntfy
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.release.outputs.version }}
+      - name: Record publication and required package visibility
+        env:
+          PUBLISHED_IMAGE: ${{ steps.release.outputs.image }}
+          PUBLISHED_VERSION: ${{ steps.release.outputs.version }}
+        shell: python
+        run: |
+          import os
+          from pathlib import Path
+
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as summary:
+              summary.write(f"Published `{os.environ['PUBLISHED_IMAGE']}:{os.environ['PUBLISHED_VERSION']}` for amd64 and arm64.\n\n")
+              summary.write("Before submitting to Unraid Community Applications, set this GHCR package's visibility to **Public** in its package settings and confirm an anonymous `docker pull` succeeds. Publishing does not change package visibility.\n")

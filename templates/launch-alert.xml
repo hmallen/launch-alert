@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Container version="2">
+  <Name>Launch-Alert</Name>
+  <Repository>ghcr.io/hmallen/launch-alert:latest</Repository>
+  <Registry>https://ghcr.io/hmallen/launch-alert</Registry>
+  <Network>bridge</Network>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <ExtraParams>--user=99:100 --restart=unless-stopped --read-only --cap-drop=ALL --security-opt=no-new-privileges --tmpfs=/tmp:rw,noexec,nosuid,size=16m</ExtraParams>
+  <Icon>https://raw.githubusercontent.com/hmallen/launch-alert/main/assets/launch-alert.png</Icon>
+  <Overview>Rocket launch reminders on your phones and computers through ntfy. Sends an alert about 30 minutes before launches with a listed livestream, including a watch link. Follows delays and holds, retries failed notifications, and preserves reminder history across restarts. Set your own private ntfy topic and subscribe each device. Headless: configure this app in Unraid's container settings; no WebUI or published ports are required. Internet access and working device notification permissions are required. Launch times and push receipt can change.</Overview>
+  <Project>https://github.com/hmallen/launch-alert</Project>
+  <TemplateURL>https://raw.githubusercontent.com/hmallen/launch-alert/main/templates/launch-alert.xml</TemplateURL>
+  <ReadMe>https://raw.githubusercontent.com/hmallen/launch-alert/main/unraid/README.md</ReadMe>
+  <Category>Tools:</Category>
+  <ExtraSearchTerms>rocket launch space livestream ntfy notification reminder</ExtraSearchTerms>
+  <Requires>Outbound HTTPS access to ll.thespacedevs.com and your ntfy server. Subscribe your devices to the configured topic. Keep the Unraid server running and its clock synchronized.</Requires>
+  <Changes>Initial Unraid package with persistent appdata, configurable ntfy alerts, and an internal health check.</Changes>
+  <Beta>true</Beta>
+  <License>MIT</License>
+  <Config Name="Appdata" Target="/config" Default="/mnt/user/appdata/launch-alert" Mode="rw" Description="Persistent reminder history and retry state. Keep this folder across container updates." Type="Path" Display="always" Required="true" Mask="false"/>
+  <Config Name="ntfy server" Target="NTFY_SERVER" Default="https://ntfy.sh" Mode="" Description="HTTPS ntfy server. The default supports Android, iPhone, and desktop clients." Type="Variable" Display="always" Required="true" Mask="false"/>
+  <Config Name="Private ntfy topic" Target="NTFY_TOPIC" Default="" Mode="" Description="Required: enter your own long random topic and subscribe every device to it. Anyone who knows an unreserved public topic can read and publish to it. Do not reuse an example topic." Type="Variable" Display="always" Required="true" Mask="true"/>
+  <Config Name="Reminder lead time (minutes)" Target="LEAD_MINUTES" Default="30" Mode="" Description="Send reminders this many minutes before the published launch time (1-1440)." Type="Variable" Display="always" Required="true" Mask="false"/>
+  <Config Name="Display time zone" Target="DISPLAY_TIMEZONE" Default="" Mode="" Description="Optional IANA time zone, such as America/Chicago. Leave blank to use the Unraid server's time zone." Type="Variable" Display="always" Required="false" Mask="false"/>
+  <Config Name="ntfy access token" Target="NTFY_TOKEN" Default="" Mode="" Description="Optional bearer token for an authenticated ntfy server. Masking hides this value in the form; Unraid still stores it in the container configuration." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+  <Config Name="Schedule refresh interval (seconds)" Target="POLL_SECONDS" Default="300" Mode="" Description="Keep 300 for the free Launch Library API (15 requests/hour per IP). Must be shorter than the maximum data age." Type="Variable" Display="advanced" Required="true" Mask="false"/>
+  <Config Name="Maximum data age (seconds)" Target="MAX_DATA_AGE_SECONDS" Default="900" Mode="" Description="Suppress notifications when schedule data is older than this. Must exceed the refresh interval (60-3600)." Type="Variable" Display="advanced" Required="true" Mask="false"/>
+  <Config Name="Launch Library access token" Target="LL2_TOKEN" Default="" Mode="" Description="Optional Launch Library 2 API token for a paid account." Type="Variable" Display="advanced" Required="false" Mask="true"/>
+  <Config Name="Database path" Target="DB_PATH" Default="/config/launch-alert.sqlite3" Mode="" Description="SQLite database in the persistent appdata mount." Type="Variable" Display="hidden" Required="true" Mask="false"/>
+  <Config Name="Configuration file" Target="ENV_FILE" Default="/dev/null" Mode="" Description="Unraid supplies settings as environment variables." Type="Variable" Display="hidden" Required="true" Mask="false"/>
+</Container>
