@@ -1,8 +1,8 @@
 # Launch Alert for Unraid
 
-This directory packages Launch Alert for Unraid's Docker manager and a future [Community Applications](https://github.com/unraid/community.applications) submission. The app runs in the background and sends ntfy notifications 30 minutes before eligible rocket launches with livestreams. It has no web interface or published ports.
+This directory packages Launch Alert for Unraid's Docker manager and [Community Applications](https://github.com/unraid/community.applications). The app runs in the background and sends ntfy notifications 30 minutes before eligible rocket launches with livestreams. It has no web interface or published ports.
 
-The template is prepared for `ghcr.io/hmallen/launch-alert:latest`. **The image must be published and made public before other people can install it.** A template in this repository does not make the app available in Community Applications.
+Public images are available at `ghcr.io/hmallen/launch-alert:latest` and `ghcr.io/hmallen/launch-alert:1.0.0`. You can install the template manually using the steps below. Availability in Community Applications requires submission and approval through its portal.
 
 ## Install and test on your Unraid server
 
@@ -52,10 +52,14 @@ Updates preserve the appdata directory. Stop the container before backing it up;
 
 The app's health endpoint stays inside the container; use Docker health and the `status` command above. An unhealthy status does not itself restart a container. Host outages and device push settings can prevent alerts; see [device setup and reliability details](../README.md#reliability-and-scope), including Android background delivery and self-hosted ntfy's iOS requirements.
 
+## Tested compatibility
+
+Release `v1.0.0` was tested on Unraid **7.3.3** with Docker **29.8.2** on **2026-10-16**, using the public `latest` image. Verification covered installation as UID 99/GID 100, read-only container operation, persistent appdata after restart, Docker health, live schedule refreshes, and ntfy publishing. Android notification delivery was confirmed while the device was locked after correcting its subscription settings.
+
 ## Publish and submit to Community Applications
 
 1. Keep the source repository public at [hmallen/launch-alert](https://github.com/hmallen/launch-alert), including its MIT license, icon, [`ca_profile.xml`](../ca_profile.xml), and [template](../templates/launch-alert.xml). Update the repository, maintainer, support, icon, and registry URLs together if publishing under another account.
-2. In GitHub **Actions → Publish image → Run workflow**, enter a version such as `v1.0.0`, or push a matching release tag. The [workflow](../.github/workflows/publish-image.yml) builds `linux/amd64` and `linux/arm64` images after verification. Stable versions update `latest`; prereleases such as `v1.1.0-rc.1` publish only their full version tag. After the first publication, set the GHCR package's visibility to **Public** in GitHub's package settings; a public source repository alone does not make its package public.
+2. In GitHub **Actions → Publish image → Run workflow**, enter a version such as `v1.0.0`, or push a matching release tag. The [workflow](../.github/workflows/publish-image.yml) builds `linux/amd64` and `linux/arm64` images after verification. Stable versions update `latest`; prereleases such as `v1.1.0-rc.1` publish only their full version tag. If the GHCR package is private after its first publication, set its visibility to **Public** in GitHub's package settings; a public source repository alone does not make its package public.
 3. Verify the release can be pulled without registry credentials. On a machine without saved GHCR credentials, run:
 
    ```sh
@@ -81,4 +85,4 @@ Suggested description for the submission:
 
 Use [GitHub Issues](https://github.com/hmallen/launch-alert/issues) for app support. Publishing the image, completing a real Unraid installation, and submitting the repository are release steps; they are not performed by the local validation scripts.
 
-The template is marked beta until it has passed a real Unraid installation and locked-device delivery test. Remove the `<Beta>true</Beta>` flag when that release testing is complete. Local container smoke checks exercise permissions, appdata persistence, and health with fixtures; they do not contact the launch API or send real notifications.
+The template's beta flag was removed after the real Unraid installation and locked-device delivery tests passed. Local container smoke checks exercise permissions, appdata persistence, and health with fixtures; they do not contact the launch API or send real notifications.

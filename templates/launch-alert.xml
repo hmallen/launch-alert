@@ -16,7 +16,6 @@
   <ExtraSearchTerms>rocket launch space livestream ntfy notification reminder</ExtraSearchTerms>
   <Requires>Outbound HTTPS access to ll.thespacedevs.com and your ntfy server. Subscribe your devices to the configured topic. Keep the Unraid server running and its clock synchronized.</Requires>
   <Changes>Initial Unraid package with persistent appdata, configurable ntfy alerts, and an internal health check.</Changes>
-  <Beta>true</Beta>
   <License>MIT</License>
   <Config Name="Appdata" Target="/config" Default="/mnt/user/appdata/launch-alert" Mode="rw" Description="Persistent reminder history and retry state. Keep this folder across container updates." Type="Path" Display="always" Required="true" Mask="false"/>
   <Config Name="ntfy server" Target="NTFY_SERVER" Default="https://ntfy.sh" Mode="" Description="HTTPS ntfy server. The default supports Android, iPhone, and desktop clients." Type="Variable" Display="always" Required="true" Mask="false"/>
